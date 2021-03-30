@@ -5,6 +5,7 @@ defmodule Raft.Server do
 
   def init(args) do
     # TODO: Whatever initialization needs to be done for the server.
+    {:ok, :follower, {}, []}
   end
 
   def follower(:enter, state, data) do

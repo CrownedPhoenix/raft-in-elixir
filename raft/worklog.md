@@ -31,7 +31,8 @@ Resources:
     which will be handled atomically and in some total order.
 
 ## 03/30/2021 (0.75hr)
- - READ (started) http://erlang.org/doc/man/gen_statem.html
- - READ (started) http://erlang.org/doc/design_principles/statem.html
-     - **NOTE:** Erlang's statem module/behavior supports `transition actions` that
-       will help with managing state timeouts.
+- READ (continued) `GenStateMachine`
+- READ (started) http://erlang.org/doc/man/gen_statem.html
+- READ (started) http://erlang.org/doc/design_principles/statem.html
+    - **NOTE:** Erlang's statem module/behavior supports `transition actions` that
+      will help with managing state timeouts.
