@@ -36,3 +36,6 @@ Resources:
 - READ (started) http://erlang.org/doc/design_principles/statem.html
     - **NOTE:** Erlang's statem module/behavior supports `transition actions` that
       will help with managing state timeouts.
+
+## 03/31/2021 (0.5hr)
+- Played around with `transition actions` to figure out how to make use of them
