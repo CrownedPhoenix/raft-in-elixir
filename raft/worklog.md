@@ -39,3 +39,6 @@ Resources:
 
 ## 03/31/2021 (0.5hr)
 - Played around with `transition actions` to figure out how to make use of them
+
+## 04/01/2021 (1hr)
+- READ (continued) `erlang.org/doc/man/gen_statem.html`
