@@ -10,14 +10,18 @@ defmodule Raft.Server do
 
   def follower(:enter, state, data) do
     Logger.info("Entering follower state.")
-    {:next_state, :follower, data, [{{:timeout, :one}, 500, {1}}, {{:timeout, :two}, 1000, {2}}]}
+    {:next_state, :follower, data, [{{:timeout, :one}, 500, {1}}, {{:timeout, :two}, 3000, {2}}]}
+  end
+
+  def follower({:timeout, :two}, data, state) do
+    Logger.info("Cancelling timeout two")
+    {:next_state, :follower, data, [{{:timeout, :two}, :cancel}]}
   end
 
   def follower({:timeout, name}, data, state) do
     Logger.info("Timeout received.")
     IO.inspect({name, state, data})
-    {:next_state, :follower, data}
+    Process.sleep(5000)
+    {:next_state, :follower, data, [{{:timeout, :two}, 5000, {3}}]}
   end
-
-
 end
