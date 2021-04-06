@@ -2,26 +2,44 @@ defmodule Raft.Server do
   use GenStateMachine, callback_mode: [:state_functions, :state_enter]
 
   require Logger
+  alias Raft.{State}
 
-  def init(args) do
-    # TODO: Whatever initialization needs to be done for the server.
-    {:ok, :follower, {:state, 0}, []}
+  @initialstate %State{}
+
+  #############
+  # CALLBACKS #
+  #############
+
+  def start_link({name}) do
+    GenStateMachine.start_link(__MODULE__, {:follower, name})
+  end
+
+  def init({:follower, name}) do
+    state = %{@initialstate | me: name}
+    {:ok, :follower, state, []}
   end
 
   def follower(:enter, state, data) do
     Logger.info("Entering follower state.")
-    {:next_state, :follower, data, [{{:timeout, :one}, 500, {1}}, {{:timeout, :two}, 3000, {2}}]}
+    {:next_state, :follower, data, follower_timeouts(state)}
   end
 
-  def follower({:timeout, :two}, data, state) do
-    Logger.info("Cancelling timeout two")
-    {:next_state, :follower, data, [{{:timeout, :two}, :cancel}]}
+  def candidate(:enter, state, data) do
+    Logger.info("Entering candidate state.")
+    {:next_state, :candidate, state, data, [election_timeout(state) | request_vote_timeouts(state)]}
   end
 
   def follower({:timeout, name}, data, state) do
     Logger.info("Timeout received.")
-    IO.inspect({name, state, data})
-    Process.sleep(5000)
-    {:next_state, :follower, data, [{{:timeout, :two}, 5000, {3}}]}
+    {:next_state, :follower, data, []}
+  end
+
+  def follower(:state_timeout, data, state) do
+    Logger.info("State timeout (follower) recieved.")
+    {:repeat_state, data}
+  end
+
+  def follower_timeouts(state) do
+    [{:state_timeout, 1000, nil}]
   end
 end

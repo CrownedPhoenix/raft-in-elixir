@@ -52,3 +52,43 @@ Resources:
     `http://erlang.org/doc/design_principles/statem.html#example`
       * Not complete. I realized I don't need it complete because I'm confident that 
         the remainder can be done with `GenStateServer`
+
+## 04/05/2021 (1.5hr)
+- Spent some time thinking about implementation questions:
+    * Can I sidestep worrying about configuration transitions?  
+      __Yes. Just make the Network allow named endpoints. All peers start with the
+      same list of neighbor names. If one peer starts before another, the Network will
+      just timeout the response until the peer has registered itself on the network 
+      under its specified name.__
+    * Are there any improvements on`toniqsystems` implementation that I can consider?  
+      __Yes. `toniqsystems` uses a single timeout for each state. I've figured out how
+      to utilize mutliple timeouts per state so that a leader can have independent timeouts
+      for each of its followers.__  
+      __Additionally, the unreliable network abstraction seems like it would be a unique
+      improvement if I can get to that.__
+- Read over some more of the high level details of `toniqsystems` implementation. Specifically regarding:
+    * Initialization
+    * Keeping state data
+    * Configuration / Configuration changes
+    * Config (startup)
+- Learned some Elixir sugar I didn't know:
+    * Anonymous functions can be written without parentheses.  
+      ```elixir
+      def foo(num, func) do
+        func.(num)
+      end
+
+      foo(5, & &1 + 1) # 6
+      ```
+    * Alternative to updating existing key in map.
+      ```elixir
+      a = %{foo: 1, bar: 2}
+      %{a | foo: 3 } # %{foo: 3, bar: 2}
+      ```
+## 04/06/2021 (1.75hr)
+- Added a few more handlers to Raft.Server
+- Looked over the first two of `toniqsystems` commits to get a feel for where they started out. I wanted to get an intuition for the early phase of development, specifically regarding project layout.
+    * **NOTE:** 
+       - Test driven development. I ought to start with some basic tests - it will help me with project organization I think.
+       - Config module appeared pretty early.
+- __ROADBLOCK:__ The biggest roadblock I'm having right now is project organization. I already have my original Golang implementation and I understand how I can use GenStateMachine to implement the event handlers for the various cases (many of which I already drafted in the [diagram](../RaftStateDiagram.jpg) I made. So I need to get more solid on the layout I want to employ.

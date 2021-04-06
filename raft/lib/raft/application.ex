@@ -10,8 +10,9 @@ defmodule Raft.Application do
     children = [
       # Starts a worker by calling: Raft.Worker.start_link(arg)
       # {Raft.Worker, arg}
+      {Raft.Server, {:s1}}
     ]
-    IO.puts "Starting..."
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Raft.Supervisor]
