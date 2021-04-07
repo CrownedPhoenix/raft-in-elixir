@@ -92,3 +92,10 @@ Resources:
        - Test driven development. I ought to start with some basic tests - it will help me with project organization I think.
        - Config module appeared pretty early.
 - __ROADBLOCK:__ The biggest roadblock I'm having right now is project organization. I already have my original Golang implementation and I understand how I can use GenStateMachine to implement the event handlers for the various cases (many of which I already drafted in the [diagram](../RaftStateDiagram.jpg) I made. So I need to get more solid on the layout I want to employ.
+
+## 04/07/2021 (1.5hr)
+- Made some updates to Raft.Server
+- Tried to simplify stuff where possible
+- Got a basic :follower running with a state timeout.
+- **TODO:** Try to just get leader election up and running on a hardcoded cluster.
+

@@ -10,7 +10,6 @@ defmodule Raft.Application do
     children = [
       # Starts a worker by calling: Raft.Worker.start_link(arg)
       # {Raft.Worker, arg}
-      {Raft.Server, {:s1}}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

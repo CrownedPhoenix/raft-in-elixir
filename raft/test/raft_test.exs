@@ -2,7 +2,7 @@ defmodule RaftTest do
   use ExUnit.Case
   doctest Raft
 
-  test "greets the world" do
+  test "start single node" do
     assert Raft.hello() == :world
   end
 end

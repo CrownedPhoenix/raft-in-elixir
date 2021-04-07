@@ -2,9 +2,10 @@ defmodule Raft.Server do
   use GenStateMachine, callback_mode: [:state_functions, :state_enter]
 
   require Logger
-  alias Raft.{State}
+  alias Raft.{State, Config}
 
   @initialstate %State{}
+  @default_config %Config{members: [:s1, :s2, :s3]}
 
   #############
   # CALLBACKS #
@@ -15,18 +16,19 @@ defmodule Raft.Server do
   end
 
   def init({:follower, name}) do
-    state = %{@initialstate | me: name}
+    state = %{@initialstate | me: name, config: @default_config}
     {:ok, :follower, state, []}
   end
 
-  def follower(:enter, state, data) do
+  def follower(:enter, old_state, state) do
     Logger.info("Entering follower state.")
-    {:next_state, :follower, data, follower_timeouts(state)}
+    {:next_state, :follower, state, [election_timeout(state)]}
   end
 
-  def candidate(:enter, state, data) do
+  def candidate(:enter, old_state, state) do
     Logger.info("Entering candidate state.")
-    {:next_state, :candidate, state, data, [election_timeout(state) | request_vote_timeouts(state)]}
+
+    {:next_state, :candidate, state, [election_timeout(state) | request_vote_timeouts(state)]}
   end
 
   def follower({:timeout, name}, data, state) do
@@ -36,10 +38,14 @@ defmodule Raft.Server do
 
   def follower(:state_timeout, data, state) do
     Logger.info("State timeout (follower) recieved.")
-    {:repeat_state, data}
+    {:repeat_state, state}
   end
 
-  def follower_timeouts(state) do
-    [{:state_timeout, 1000, nil}]
+  def election_timeout(state) do
+    {:state_timeout, state.config.election_timeout, nil}
+  end
+
+  def request_vote_timeouts(state) do
+    []
   end
 end

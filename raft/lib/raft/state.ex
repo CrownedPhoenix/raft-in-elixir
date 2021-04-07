@@ -8,5 +8,6 @@ defmodule Raft.State do
             nextIndex: [],
             matchIndex: [],
             voteCount: 0,
-            voted: []
+            voted: [],
+            config: nil
 end
