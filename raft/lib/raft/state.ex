@@ -8,6 +8,19 @@ defmodule Raft.State do
             nextIndex: [],
             matchIndex: [],
             voteCount: 0,
-            voted: [],
-            config: nil
+            voted: %{},
+            config: nil,
+            log: [{:head}]
+
+  def reset_votes(state) do
+    %{
+      state
+      | voteCount: 0,
+        voted: Enum.map(state.voted, fn {peer, _} -> {peer, false} end) |> Enum.into(%{})
+    }
+  end
+
+  def vote_for(state, peer) do
+    %{state | votedFor: peer}
+  end
 end

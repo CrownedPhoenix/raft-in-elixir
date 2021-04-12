@@ -99,3 +99,6 @@ Resources:
 - Got a basic :follower running with a state timeout.
 - **TODO:** Try to just get leader election up and running on a hardcoded cluster.
 
+## 04/12/2021 (1.75hr)
+- Implemented some more state_enter and timeout_event handlers
+- Added RPC module to encapsulate message passing between nodes
