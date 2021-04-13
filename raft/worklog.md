@@ -102,3 +102,24 @@ Resources:
 ## 04/12/2021 (1.75hr)
 - Implemented some more state_enter and timeout_event handlers
 - Added RPC module to encapsulate message passing between nodes
+
+## 04/13/2021 (1hr)
+- Got two Raft nodes communicating on localhost from within `iex`:
+    Terminal 1:  
+    ```elixir
+    iex --sname :s1 -S mix
+    iex> Raft.Server.start_link(:s1)
+    ```
+
+    Terminal 2:  
+    ```elixir
+    iex --sname :s1 -S mix
+    iex> Raft.Server.start_link(:s2)
+    ```
+    
+    Terminal 3 (to terminate):  
+    ```elixir
+    iex --sname :root -S mix
+    iex> Raft.Server.stop({:s1, :s1@localhost}); Raft.Server.stop({:s2, :s2@localhost})
+    ```
+- Started implementing RequestVote handlers

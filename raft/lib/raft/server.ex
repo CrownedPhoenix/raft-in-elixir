@@ -14,14 +14,18 @@ defmodule Raft.Server do
   }
 
   @initialstate %State{}
-  @default_config %Config{members: [:s1, :s2, :s3]}
+  @default_config %Config{members: [{:s1, :s1@localhost}, {:s2, :s2@localhost}, {:s3, :s3@localhost}]}
 
   #############
   # CALLBACKS #
   #############
 
-  def start_link({name}) do
-    GenStateMachine.start_link(__MODULE__, {:follower, name})
+  def start_link(name) do
+    GenStateMachine.start_link(__MODULE__, {:follower, name}, name: name)
+  end
+
+  def stop(name) do
+    GenStateMachine.stop(name)
   end
 
   def init({:follower, name}) do
@@ -34,6 +38,11 @@ defmodule Raft.Server do
     Logger.info("#{state.me} Entering follower state.")
     new_state = State.reset_votes(state)
     {:next_state, :follower, new_state, [election_timeout(state) | stop_peer_timeouts(state)]}
+  end
+
+  def follower(:cast, %RequestVote{} = rsp, state) do
+    Logger.info("#{state.me} recieved #{inspect(rsp)}")
+    :keep_state_and_data
   end
 
   def follower({:timeout, name}, data, state) do
@@ -51,8 +60,11 @@ defmodule Raft.Server do
 
     new_state =
       state
+      |> State.increment_term()
       |> State.reset_votes()
       |> State.vote_for(state.me)
+
+    Logger.info("#{state.me} Starting election for term #{new_state.currentTerm}.")
 
     RPC.broadcast(
       Enum.map(Enum.reject(state.peers, &(&1 == state.me)), fn peer ->
@@ -69,9 +81,25 @@ defmodule Raft.Server do
     {:next_state, :candidate, new_state, [election_timeout(state) | request_vote_timeouts(state)]}
   end
 
+  def candidate(:cast, %RequestVote{} = rsp, state) do
+    Logger.info("#{state.me} recieved #{inspect(rsp)}")
+    :keep_state_and_data
+  end
+
   def candidate({:timeout, name}, data, state) do
     Logger.info("#{state.me} Timeout received.")
-    {:next_state, :follower, state, []}
+
+    RPC.broadcast([
+      {name,
+       %RequestVote{
+         term: state.currentTerm,
+         candidateId: state.me,
+         lastLogIndex: length(state.log) - 1,
+         lastLogTerm: List.last(state.log)
+       }}
+    ])
+
+    :keep_state_and_data
   end
 
   def candidate(:state_timeout, data, state) do
@@ -87,10 +115,12 @@ defmodule Raft.Server do
   end
 
   def request_vote_timeouts(state) do
+    timeout = state.config.heartbeat_timeout
+
     state.peers
     |> Enum.reject(&(&1 == state.me))
     |> Enum.map(fn name ->
-      {{:timeout, name}, state.config.heartbeat_timeout, {}}
+      {{:timeout, name}, Enum.random(timeout..(2 * timeout)), {}}
     end)
   end
 

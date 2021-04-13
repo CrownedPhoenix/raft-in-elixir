@@ -12,6 +12,10 @@ defmodule Raft.State do
             config: nil,
             log: [{:head}]
 
+  def increment_term(state) do
+    %{state | currentTerm: state.currentTerm + 1}
+  end
+
   def reset_votes(state) do
     %{
       state

@@ -22,10 +22,10 @@ defmodule Raft.RPC do
   end
 
   def broadcast(msgs) do
-    IO.inspect(msgs)
     Enum.each(msgs, fn {to, rpc} ->
-      Logger.info(["Call to: #{to}; ", inspect(rpc)])
+      Logger.info(["Call to: #{inspect to}; ", inspect(rpc)])
       GenStateMachine.cast(to, rpc)
     end)
   end
+
 end
