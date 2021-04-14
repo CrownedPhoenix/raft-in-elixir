@@ -107,19 +107,19 @@ Resources:
 - Got two Raft nodes communicating on localhost from within `iex`:
     Terminal 1:  
     ```elixir
-    iex --sname :s1 -S mix
+    iex --sname s1 -S mix
     iex> Raft.Server.start_link(:s1)
     ```
 
     Terminal 2:  
     ```elixir
-    iex --sname :s1 -S mix
+    iex --sname s1 -S mix
     iex> Raft.Server.start_link(:s2)
     ```
     
     Terminal 3 (to terminate):  
     ```elixir
-    iex --sname :root -S mix
+    iex --sname root -S mix
     iex> Raft.Server.stop({:s1, :s1@localhost}); Raft.Server.stop({:s2, :s2@localhost})
     ```
 - Started implementing RequestVote handlers

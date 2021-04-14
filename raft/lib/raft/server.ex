@@ -14,7 +14,9 @@ defmodule Raft.Server do
   }
 
   @initialstate %State{}
-  @default_config %Config{members: [{:s1, :s1@localhost}, {:s2, :s2@localhost}, {:s3, :s3@localhost}]}
+  @default_config %Config{
+    members: [{:s1, :s1@BATDRIVE}, {:s2, :s2@BATDRIVE}, {:s3, :s3@BATDRIVE}]
+  }
 
   #############
   # CALLBACKS #
@@ -67,11 +69,11 @@ defmodule Raft.Server do
     Logger.info("#{state.me} Starting election for term #{new_state.currentTerm}.")
 
     RPC.broadcast(
-      Enum.map(Enum.reject(state.peers, &(&1 == state.me)), fn peer ->
+      Enum.map(Enum.reject(state.peers, &(elem(&1, 0) == state.me)), fn peer ->
         {peer,
          %RequestVote{
+           from: state.me,
            term: state.currentTerm,
-           candidateId: state.me,
            lastLogIndex: length(state.log) - 1,
            lastLogTerm: List.last(state.log)
          }}
@@ -92,8 +94,8 @@ defmodule Raft.Server do
     RPC.broadcast([
       {name,
        %RequestVote{
+         from: state.me,
          term: state.currentTerm,
-         candidateId: state.me,
          lastLogIndex: length(state.log) - 1,
          lastLogTerm: List.last(state.log)
        }}
@@ -118,7 +120,7 @@ defmodule Raft.Server do
     timeout = state.config.heartbeat_timeout
 
     state.peers
-    |> Enum.reject(&(&1 == state.me))
+    |> Enum.reject(&(elem(&1, 0) == state.me))
     |> Enum.map(fn name ->
       {{:timeout, name}, Enum.random(timeout..(2 * timeout)), {}}
     end)
