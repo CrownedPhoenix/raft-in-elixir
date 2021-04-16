@@ -124,7 +124,7 @@ Resources:
     ```
 - Started implementing RequestVote handlers
 
-## 04/16/2021 (1.5hr)
+## 04/16/2021 (1.75hr)
 - Implemented RequestVote and RequestVoteResp handlers.
 - Not yet tested...
 
