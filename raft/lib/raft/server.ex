@@ -42,9 +42,27 @@ defmodule Raft.Server do
     {:next_state, :follower, new_state, [election_timeout(state) | stop_peer_timeouts(state)]}
   end
 
-  def follower(:cast, %RequestVote{} = rsp, state) do
-    Logger.info("#{state.me} recieved #{inspect(rsp)}")
-    :keep_state_and_data
+  def follower(:cast, %RequestVote{} = req, state) do
+    Logger.info("#{state.me} recieved #{inspect(req)}")
+
+    new_state = State.handle_requestvote(state, req)
+
+    RPC.broadcast([
+      {
+        req.from,
+        %RequestVoteResp{
+          from: new_state.me,
+          term: new_state.currentTerm,
+          voteGranted: new_state.votedFor == req.from
+        }
+      }
+    ])
+
+    if new_state.votedFor == req.from do
+      {:repeat_state, new_state}
+    else
+      {:keep_state, new_state}
+    end
   end
 
   def follower({:timeout, name}, data, state) do
@@ -83,9 +101,57 @@ defmodule Raft.Server do
     {:next_state, :candidate, new_state, [election_timeout(state) | request_vote_timeouts(state)]}
   end
 
-  def candidate(:cast, %RequestVote{} = rsp, state) do
+  def candidate(:cast, %RequestVote{} = req, state) do
     Logger.info("#{state.me} recieved #{inspect(rsp)}")
-    :keep_state_and_data
+    new_state = State.handle_requestvote(state, req)
+
+    RPC.broadcast([
+      {
+        req.from,
+        %RequestVoteResp{
+          from: new_state.me,
+          term: new_state.currentTerm,
+          voteGranted: new_state.votedFor == req.from
+        }
+      }
+    ])
+
+    if new_state.votedFor == req.from do
+      {:next_state, :follower, new_state}
+    else
+      {:keep_state, new_state}
+    end
+  end
+
+  def candidate(:cast, %RequestVoteResp{} = rsp, state) do
+    cond do
+      State.has_voted?(state, rsp.from) ->
+        :keep_state_and_data
+
+      rsp.term >= state.currentTerm ->
+        new_state = State.mark_voted(state, rsp.from)
+
+        cond do
+          rsp.voteGranted and rsp.term == state.currentTerm ->
+            new_state = State.increment_vote_count(new_state)
+
+            if new_state.voteCount >= State.majority(state) do
+              {:next_state, :leader, new_state, [stop_peer_timeout(rsp.from)]}
+            else
+              {:keep_state, new_state, [stop_peer_timeout(rsp.from)]}
+            end
+
+          rsp.term > state.currentTerm ->
+            new_state = State.update_term(new_state, rsp.term)
+            {:next_state, :follower, new_state, [stop_peer_timeout(rsp.from)]}
+
+          true ->
+            {:keep_state, new_state, [stop_peer_timeout(rsp.from)]}
+        end
+
+      true ->
+        :keep_state_and_data
+    end
   end
 
   def candidate({:timeout, name}, data, state) do
@@ -130,5 +196,9 @@ defmodule Raft.Server do
     Enum.map(state.peers, fn name ->
       {{:timeout, name}, :cancel}
     end)
+  end
+
+  def stop_peer_timeout(state, peer) do
+    {{:timeout, peer}, :cancel}
   end
 end

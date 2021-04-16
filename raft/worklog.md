@@ -123,3 +123,8 @@ Resources:
     iex> Raft.Server.stop({:s1, :s1@localhost}); Raft.Server.stop({:s2, :s2@localhost})
     ```
 - Started implementing RequestVote handlers
+
+## 04/16/2021 (1.5hr)
+- Implemented RequestVote and RequestVoteResp handlers.
+- Not yet tested...
+
