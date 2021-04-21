@@ -107,6 +107,10 @@ defmodule Raft.State do
     end
   end
 
+  def handle_append_entries_resp(state) do
+
+  end
+
   def prepare_request_vote_resp(state, to) do
     %RequestVoteResp{
       from: state.me,
