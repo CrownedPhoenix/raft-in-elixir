@@ -2,7 +2,7 @@ defmodule Raft.RPC do
   require Logger
 
   defmodule AppendEntries do
-    @enforce_keys [:from, :term, :leaderId, :prevLogIndex, :prevLogTerm, :entries, :leaderCommit]
+    @enforce_keys [:from, :term, :prevLogIndex, :prevLogTerm, :entries, :leaderCommit]
     defstruct [:from, :term, :leaderId, :prevLogIndex, :prevLogTerm, :entries, :leaderCommit]
   end
 

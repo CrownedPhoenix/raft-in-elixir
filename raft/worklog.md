@@ -97,7 +97,7 @@ Resources:
 - Made some updates to Raft.Server
 - Tried to simplify stuff where possible
 - Got a basic :follower running with a state timeout.
-- **TODO:** Try to just get leader election up and running on a hardcoded cluster.
+- [x] **TODO:** Try to just get leader election up and running on a hardcoded cluster.
 
 ## 04/12/2021 (1.75hr)
 - Implemented some more state_enter and timeout_event handlers
@@ -128,3 +128,11 @@ Resources:
 - Implemented RequestVote and RequestVoteResp handlers.
 - Not yet tested...
 
+## 04/19/2021 (1.25hr)
+- Got leader election working!
+  - Nodes will hold an election, decide on a leader, and then timeout and hold another election (the leader sends no AppendEntries to maintain leadership)
+- [] **TODO:** Clean up the log prints. Maybe colorize them?
+
+## 04/21/2021 (1hr)
+- Started implementing AppendEntries; untested
+- [] **TODO:** Move handle_request_vote_resp (etc) into State
