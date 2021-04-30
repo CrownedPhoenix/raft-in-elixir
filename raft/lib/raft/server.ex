@@ -204,12 +204,32 @@ defmodule Raft.Server do
     end
   end
 
-  def leader(:cast, %AppendEntriesResp{success: true} = rsp, state) do
-    Logger.info("#{inspect state.me} recieved AppendEntries response: #{inspect rsp}")
-    new_state = State.handle_append_entries_resp(state)
+  def leader(:cast, %{currentTerm: currentTerm} = state, %AppendEntriesResp{term: term} = rsp)
+      when currentTerm > term do
+    :keep_state_and_data
   end
 
-  def leader(:cast, %AppendEntriesResp{success: false} = rsp, state) do
+  def leader(:cast, %AppendEntriesResp{success: true} = rsp, state) do
+    Logger.info("#{inspect(state.me)} recieved AppendEntries response: #{inspect(rsp)}")
+
+    Logger.info(
+      "#{inspect(state.me)} bumping indices... NXT: #{state.nextIndex} MTCH: #{state.matchIndex} LA: #{
+        state.lastApplied
+      }"
+    )
+
+    matchIndex = Map.put(state.matchIndex, rsp.from, rsp.closestIndex)
+    nextIndex = Map.put(state.nextIndex, rsp.from, rsp.closestIndex + 1)
+
+    Logger.info(
+      "#{inspect(state.me)} bumped indices... NXT: #{state.nextIndex} MTCH: #{state.matchIndex} LA: #{
+        state.lastApplied
+      }"
+    )
+
+    state = maybe_send_reply(state, rsp)
+
+    {:keep_state, state, [append_entries_timeout(state, rsp.from)]}
   end
 
   def leader({:timeout, name}, data, state) do
@@ -246,6 +266,12 @@ defmodule Raft.Server do
     |> Enum.map(fn name ->
       {{:timeout, name}, Enum.random(timeout..(2 * timeout)), {}}
     end)
+  end
+
+  def append_entries_timeout(state, peer) do
+    timeout = state.config.heartbeat_timeout
+
+    {{:timeout, peer}, Enum.random(timeout..(2 * timeout)), {}}
   end
 
   def stop_peer_timeouts(state) do

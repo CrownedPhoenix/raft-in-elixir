@@ -1,6 +1,13 @@
 defmodule Raft.State do
   require Logger
-  alias Raft.{LogEntry, RPC.RequestVote, RPC.RequestVoteResp, RPC.AppendEntries}
+
+  alias Raft.{
+    LogEntry,
+    RPC.RequestVote,
+    RPC.RequestVoteResp,
+    RPC.AppendEntries,
+    RPC.AppendEntriesResp
+  }
 
   defstruct peers: [],
             me: nil,
@@ -8,8 +15,8 @@ defmodule Raft.State do
             votedFor: nil,
             commitIndex: 0,
             lastApplied: 0,
-            nextIndex: [],
-            matchIndex: [],
+            nextIndex: %{},
+            matchIndex: %{},
             voteCount: 0,
             voted: %{},
             config: nil,
@@ -107,8 +114,35 @@ defmodule Raft.State do
     end
   end
 
-  def handle_append_entries_resp(state) do
+  def handle_append_entries_resp(
+        %{currentTerm: currentTerm} = state,
+        %AppendEntriesResp{term: term} = rsp
+      )
+      when currentTerm > term do
+    :keep_state_and_data
+  end
 
+  def handle_append_entries_resp(state, %AppendEntriesResp{success: true} = rsp) do
+    Logger.info(
+      "#{inspect(state.me)} bumping indices... NXT: #{state.nextIndex} MTCH: #{state.matchIndex} LA: #{
+        state.lastApplied
+      }"
+    )
+
+    matchIndex = Map.put(state.matchIndex, rsp.from, rsp.closestIndex)
+    nextIndex = Map.put(state.nextIndex, rsp.from, rsp.closestIndex + 1)
+
+    Logger.info(
+      "#{inspect(state.me)} bumped indices... NXT: #{state.nextIndex} MTCH: #{state.matchIndex} LA: #{
+        state.lastApplied
+      }"
+    )
+
+    state = maybe_send_reply(state, rsp)
+    {:keep_state, state, [append_entries_timeout(state, rsp.from)]}
+  end
+
+  def handle_append_entries_resp(state, %AppendEntriesResp{success: false} = rsp) do
   end
 
   def prepare_request_vote_resp(state, to) do

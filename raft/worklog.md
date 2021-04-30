@@ -136,3 +136,18 @@ Resources:
 ## 04/21/2021 (1hr)
 - Started implementing AppendEntries; untested
 - [] **TODO:** Move handle_request_vote_resp (etc) into State
+
+## 04/30/2021 (3hr)
+- More work on AppendEntries
+    * Been tough to work through the functional rewrite of this bit
+- Interesting Elixir control flow. `with` statement:
+```elixir
+with {x, y} <- foo(),
+     true <- bar()
+do
+  nil # If all with exprs match
+else  # Matches failed expr
+  {_, b} -> baz(),
+  _ -> bin()
+end
+```
