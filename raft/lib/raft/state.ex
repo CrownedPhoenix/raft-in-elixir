@@ -123,23 +123,7 @@ defmodule Raft.State do
   end
 
   def handle_append_entries_resp(state, %AppendEntriesResp{success: true} = rsp) do
-    Logger.info(
-      "#{inspect(state.me)} bumping indices... NXT: #{state.nextIndex} MTCH: #{state.matchIndex} LA: #{
-        state.lastApplied
-      }"
-    )
 
-    matchIndex = Map.put(state.matchIndex, rsp.from, rsp.closestIndex)
-    nextIndex = Map.put(state.nextIndex, rsp.from, rsp.closestIndex + 1)
-
-    Logger.info(
-      "#{inspect(state.me)} bumped indices... NXT: #{state.nextIndex} MTCH: #{state.matchIndex} LA: #{
-        state.lastApplied
-      }"
-    )
-
-    state = maybe_send_reply(state, rsp)
-    {:keep_state, state, [append_entries_timeout(state, rsp.from)]}
   end
 
   def handle_append_entries_resp(state, %AppendEntriesResp{success: false} = rsp) do
